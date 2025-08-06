@@ -1,0 +1,57 @@
+package manager_test
+
+import (
+	"bytes"
+	"os"
+	"runtime"
+	"testing"
+	"time"
+
+	"dash0.com/otlp-log-processor-backend/internal/manager"
+	"dash0.com/otlp-log-processor-backend/internal/parser"
+	"github.com/alecthomas/assert/v2"
+	"github.com/benbjohnson/clock"
+)
+
+func loadTestfile(t *testing.T) string {
+	b, err := os.ReadFile("./testdata/out")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(b)
+}
+
+func TestManager(t *testing.T) {
+	var buf bytes.Buffer
+
+	want := loadTestfile(t)
+	mockClock := clock.NewMock()
+	config := &manager.Config{
+		Interval: 5 * time.Second,
+		Pipeline: []parser.ParserConfig{
+			{
+				Kind:        "regex",
+				MatchString: `\{.*\}`,
+			},
+			{
+				Kind:            "json",
+				FieldOfInterest: "foo",
+			},
+		},
+	}
+
+	m, err := manager.New(config, mockClock, &buf)
+	assert.NoError(t, err)
+	m.Run([]byte(`"my log body 1" - {"foo":"bar", "baz":"qux"}`))
+	m.Run([]byte(`"my log body 2" - {"foo":"qux", "baz":"qux"}`))
+	m.Run([]byte(`"my log body 3" - {"baz":"qux"}`))
+	m.Run([]byte(`"my log body 4" - {"foo":"baz"}`))
+	m.Run([]byte(`"my log body 5" - {"foo":"baz", "baz":"qux"}`))
+
+	// Pass the necessary time
+	runtime.Gosched()
+	mockClock.Add(5 * time.Second)
+
+	assert.Equal(t, want, buf.String())
+}
