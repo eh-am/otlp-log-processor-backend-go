@@ -9,11 +9,11 @@ import (
 )
 
 func TestParserCreator(t *testing.T) {
-
 	tests := []struct {
 		Config parser.ParserConfig
 		// TODO: maybe we should check directly what instance is?
 		WantName string
+		WantErr  error
 	}{
 		{
 			Config: parser.ParserConfig{
@@ -21,19 +21,44 @@ func TestParserCreator(t *testing.T) {
 			},
 			WantName: "json",
 		},
+		{
+			Config: parser.ParserConfig{
+				Kind:        "regex",
+				MatchString: `\{.*\}`,
+			},
+			WantName: "regex",
+		},
+		// Empty Regex
+		{
+			Config: parser.ParserConfig{
+				Kind: "regex",
+			},
+			WantName: "regex",
+			WantErr:  parser.ErrFailedToCreateRegexpParser,
+		},
+
+		// Invalid Regex
+		{
+			Config: parser.ParserConfig{
+				Kind:        "regex",
+				MatchString: `(`,
+			},
+			WantName: "regex",
+			WantErr:  parser.ErrFailedToCreateRegexpParser,
+		},
 	}
 
 	for _, test := range tests {
-		test := test
-		testName := fmt.Sprintf("parsing kind: '%s'", test.Config.Kind)
+		testName := fmt.Sprintf("parsing kind:%s", test.Config.Kind)
 
 		t.Run(testName, func(t *testing.T) {
 			got, err := parser.NewParserCreator(&test.Config)
-			assert.NoError(t, err, "should not error when creating a parser")
 
-			assert.Equal(t, test.WantName, got.Name())
-
+			if test.WantErr != nil {
+				assert.IsError(t, err, test.WantErr)
+			} else {
+				assert.Equal(t, test.WantName, got.Name())
+			}
 		})
 	}
-	assert.Equal(t, 10, 10)
 }

@@ -14,5 +14,5 @@ dev:
 
 .PHONY: test
 test: ## Run tests
-	go test ./...
+	go test -v ./...
 
