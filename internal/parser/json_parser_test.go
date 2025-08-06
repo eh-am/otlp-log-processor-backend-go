@@ -8,15 +8,11 @@ import (
 )
 
 func TestJSONParser(t *testing.T) {
-	parser := parser.NewJSONParser()
+	parser := parser.NewJSONParser("foo")
 
 	lm, err := parser.Parse([]byte(`{"foo":"bar", "baz":"qux"}`))
 	assert.NoError(t, err)
 
-	want := map[string]interface{}{
-		"foo": "bar",
-		"baz": "qux",
-	}
-
+	want := "bar"
 	assert.Equal(t, want, lm)
 }

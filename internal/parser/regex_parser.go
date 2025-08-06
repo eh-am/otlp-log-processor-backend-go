@@ -26,9 +26,9 @@ func NewRegexpParser(matchString string) (*RegexpParser, error) {
 	}, nil
 }
 
-func (p *RegexpParser) Parse(data []byte) (LogMap, error) {
-	panic("TODO")
-	return nil, nil
+func (p *RegexpParser) Parse(data []byte) (string, error) {
+	// TODO: maybe harmful conversion? what if we receive binary data
+	return p.re.FindString(string(data)), nil
 }
 
 func (p *RegexpParser) Name() string {

@@ -1,28 +1,35 @@
 package parser
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type JSONParser struct {
-	name string
+	name            string
+	fieldOfInterest string
 }
 
 // TODO: should we use this?
 //const MaxBodySize int64 = 52428800 // 50MB
 
-func NewJSONParser() *JSONParser {
+func NewJSONParser(fieldOfInterest string) *JSONParser {
 	return &JSONParser{
-		name: "json",
+		name:            "json",
+		fieldOfInterest: fieldOfInterest,
 	}
 }
 
-func (p *JSONParser) Parse(data []byte) (LogMap, error) {
-	var parsed LogMap
+func (p *JSONParser) Parse(data []byte) (string, error) {
+	//	var parsed LogMap
+	var parsed map[string]interface{}
 
 	if err := json.Unmarshal(data, &parsed); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return parsed, nil
+	// TODO: is this type assertion harmful?
+	return fmt.Sprintf("%v", parsed[p.fieldOfInterest]), nil
 }
 
 func (p *JSONParser) Name() string {

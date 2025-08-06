@@ -15,19 +15,22 @@ type ParserConfig struct {
 	// One of 'json' | 'regex'
 	Kind string
 
+	// Only applicable for json
+	FieldOfInterest string
+
 	// Only needed if Kind is 'regex'
 	MatchString string
 }
 
 type Parser interface {
-	Parse([]byte) (LogMap, error)
+	Parse([]byte) (string, error)
 	Name() string
 }
 
 func NewParserCreator(cfg *ParserConfig) (Parser, error) {
 	switch cfg.Kind {
 	case "json":
-		return NewJSONParser(), nil
+		return NewJSONParser(cfg.FieldOfInterest), nil
 	case "regex":
 		regexpParser, err := NewRegexpParser(cfg.MatchString)
 		if err != nil {

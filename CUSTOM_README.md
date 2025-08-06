@@ -12,6 +12,7 @@ somewhat documentable, since the configuration will tell directly what should ha
 * Receive the configuration via a file and maybe via the cli?
 * Support more types than just 'json' and 'regex', maybe gzip and other binary formats? Or custom formats like logfmt (key value) etc
 * Create a pipeline for transformations, so that one could plug regex + json parser
+* Deal with encoding
 
 ## Brainstorm
 Create a cli to generate synthetic data.
