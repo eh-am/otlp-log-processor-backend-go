@@ -11,3 +11,8 @@ install-tools: ## Install dev tools locally using 'go install'. It's expected th
 dev:
 	export DASH0_HOMEEXERCISE_ENV=dev && \
 	go run ./...
+
+.PHONY: test
+test: ## Run tests
+	go test ./...
+
