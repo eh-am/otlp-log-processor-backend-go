@@ -22,14 +22,14 @@ func loadTestfile(t *testing.T) string {
 	return string(b)
 }
 
-func TestManager(t *testing.T) {
+func TestManagerConfigMultipleOperations(t *testing.T) {
 	var buf bytes.Buffer
 
 	want := loadTestfile(t)
 	mockClock := clock.NewMock()
 	config := &manager.Config{
 		Interval: 5 * time.Second,
-		Pipeline: []parser.ParserConfig{
+		Operations: []parser.ParserConfig{
 			{
 				Kind:        "regex",
 				MatchString: `\{.*\}`,
@@ -54,4 +54,67 @@ func TestManager(t *testing.T) {
 	mockClock.Add(5 * time.Second)
 
 	assert.Equal(t, want, buf.String())
+}
+
+func TestManagerJSON(t *testing.T) {
+	var buf bytes.Buffer
+
+	want := loadTestfile(t)
+	mockClock := clock.NewMock()
+	config := &manager.Config{
+		Interval: 5 * time.Second,
+		Operations: []parser.ParserConfig{
+			{
+				Kind:            "json",
+				FieldOfInterest: "foo",
+			},
+		},
+	}
+
+	m, err := manager.New(config, mockClock, &buf)
+	assert.NoError(t, err)
+	m.Run([]byte(`{"foo":"bar", "baz":"qux"}`))
+	m.Run([]byte(`{"foo":"qux", "baz":"qux"}`))
+	m.Run([]byte(`{"baz":"qux"}`))
+	m.Run([]byte(`{"foo":"baz"}`))
+	m.Run([]byte(`{"foo":"baz", "baz":"qux"}`))
+
+	// Pass the necessary time
+	runtime.Gosched()
+	mockClock.Add(5 * time.Second)
+
+	assert.Equal(t, want, buf.String())
+}
+
+func TestManagerRegex(t *testing.T) {
+	var buf bytes.Buffer
+
+	mockClock := clock.NewMock()
+	config := &manager.Config{
+		Interval: 5 * time.Second,
+		Operations: []parser.ParserConfig{
+			{
+				Kind:        "regex",
+				MatchString: `(\d+)`,
+			},
+		},
+	}
+
+	m, err := manager.New(config, mockClock, &buf)
+	assert.NoError(t, err)
+	m.Run([]byte(`"my log body 1"`))
+	m.Run([]byte(`"my log body 2"`))
+	m.Run([]byte(`"my log body 2"`))
+	m.Run([]byte(`"my log body 3"`))
+	m.Run([]byte(`"my log body 4"`))
+
+	// Pass the necessary time
+	runtime.Gosched()
+	mockClock.Add(5 * time.Second)
+
+	assert.Equal(t, `"1" - 1
+"2" - 2
+"3" - 1
+"4" - 1
+`, buf.String())
 }

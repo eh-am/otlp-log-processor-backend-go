@@ -13,8 +13,8 @@ import (
 )
 
 type Config struct {
-	Interval time.Duration
-	Pipeline []parser.ParserConfig
+	Interval   time.Duration
+	Operations []parser.ParserConfig
 }
 
 type FlusherCounter interface {
@@ -40,10 +40,10 @@ type Manager struct {
 // 2. A key counter
 // 3. A (periodic) flusher
 func New(config *Config, clock clock.Clock, writer io.Writer) (*Manager, error) {
-	parsers := make([]parserpipeline.Parser, len(config.Pipeline))
+	parsers := make([]parserpipeline.Parser, len(config.Operations))
 
 	// Instantiate each parser
-	for i, c := range config.Pipeline {
+	for i, c := range config.Operations {
 		p, err := parser.NewParserCreator(&c)
 		parsers[i] = p
 
