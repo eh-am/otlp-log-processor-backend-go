@@ -42,13 +42,15 @@ func init() {
 	}
 
 	// Use a simpler logger when running locally
-	if os.Getenv("DASH0_HOMEEXERCISE_ENV") == "dev" {
+	if isDev() {
 		debugLvl := new(slog.LevelVar)
 		debugLvl.Set(slog.LevelDebug)
 
 		logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 			Level: debugLvl,
 		}))
+	} else {
+		logger = otelslog.NewLogger(name)
 	}
 }
 
@@ -62,16 +64,19 @@ func run() (err error) {
 	slog.SetDefault(logger)
 	logger.Info("Starting application")
 
-	// Set up OpenTelemetry.
-	otelShutdown, err := setupOTelSDK(context.Background())
-	if err != nil {
-		return
-	}
+	// Shut up OTEL when running locally
+	if !isDev() {
+		// Set up OpenTelemetry.
+		otelShutdown, err := setupOTelSDK(context.Background())
+		if err != nil {
+			return err
+		}
 
-	// Handle shutdown properly so nothing leaks.
-	defer func() {
-		err = errors.Join(err, otelShutdown(context.Background()))
-	}()
+		// Handle shutdown properly so nothing leaks.
+		defer func() {
+			err = errors.Join(err, otelShutdown(context.Background()))
+		}()
+	}
 
 	flag.Parse()
 
@@ -91,4 +96,8 @@ func run() (err error) {
 	slog.Debug("Starting gRPC server")
 
 	return grpcServer.Serve(listener)
+}
+
+func isDev() bool {
+	return os.Getenv("DASH0_HOMEEXERCISE_ENV") == "dev"
 }
