@@ -20,7 +20,7 @@ type ParserConfig struct {
 }
 
 type Parser interface {
-	Parse()
+	Parse([]byte) (LogMap, error)
 	Name() string
 }
 
