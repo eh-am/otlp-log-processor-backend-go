@@ -16,3 +16,7 @@ dev:
 test: ## Run tests
 	go test -v ./...
 
+.PHONY: run
+run: ## Run the application
+	go run ./...
+

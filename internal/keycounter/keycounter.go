@@ -50,7 +50,6 @@ func (kc *KeyCounter) Flush() {
 
 	for _, key := range keys {
 		value := kc.count[key]
-		fmt.Println("iterating over kyes", key)
 
 		// TODO: handle this appropriately
 		if key == "unknown" {

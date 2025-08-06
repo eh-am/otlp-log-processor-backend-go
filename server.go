@@ -8,7 +8,11 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"time"
 
+	"dash0.com/otlp-log-processor-backend/internal/manager"
+	"dash0.com/otlp-log-processor-backend/internal/parser"
+	"github.com/benbjohnson/clock"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
@@ -86,12 +90,33 @@ func run() (err error) {
 		return err
 	}
 
+	// TODO: load config from file
+	config := &manager.Config{
+		Interval: 30 * time.Second,
+		Operations: []parser.ParserConfig{
+			{
+				Kind:        "regex",
+				MatchString: `\{.*\}`,
+			},
+			{
+				Kind:            "json",
+				FieldOfInterest: "foo",
+			},
+		},
+	}
+	clock := clock.New()
+
+	manager, err := manager.New(config, clock, os.Stdout)
+	if err != nil {
+		return err
+	}
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.MaxRecvMsgSize(*maxReceiveMessageSize),
 		grpc.Creds(insecure.NewCredentials()),
 	)
-	collogspb.RegisterLogsServiceServer(grpcServer, newServer(*listenAddr))
+	collogspb.RegisterLogsServiceServer(grpcServer, newServer(*listenAddr, manager))
 
 	slog.Debug("Starting gRPC server")
 

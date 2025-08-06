@@ -9,12 +9,17 @@ import (
 
 type dash0LogsServiceServer struct {
 	addr string
+	svc  Svc
 
 	collogspb.UnimplementedLogsServiceServer
 }
 
-func newServer(addr string) collogspb.LogsServiceServer {
-	s := &dash0LogsServiceServer{addr: addr}
+type Svc interface {
+	Run([]byte)
+}
+
+func newServer(addr string, svc Svc) collogspb.LogsServiceServer {
+	s := &dash0LogsServiceServer{addr: addr, svc: svc}
 	return s
 }
 
@@ -22,19 +27,10 @@ func (l *dash0LogsServiceServer) Export(ctx context.Context, request *collogspb.
 	slog.DebugContext(ctx, "Received ExportLogsServiceRequest")
 	logsReceivedCounter.Add(ctx, 1)
 
-	slog.Info(request.String())
-	// Do something with the logs
-
-	// Extract the log
-	// TODO Is it a single line? Do we care about multi line?
-	// Depending on what it is, parse it
-	// Structured logs
-	// - If it's JSON, create a custom parser to throw away everything
-	//   except the field we care about, to reduce in memory usage
-	// Semi structured
-	// Unstructured
-
-	// Store the count somewhere
+	// TODO:
+	// This is wrong, since it only deals with a bare string
+	// As opposed to already structured data
+	l.svc.Run([]byte(request.String()))
 
 	return &collogspb.ExportLogsServiceResponse{}, nil
 }
