@@ -63,13 +63,16 @@ func TestLogsServiceServer_Export(t *testing.T) {
 	}
 }
 
+type noopSvc struct{}
+
+func (n *noopSvc) Run(data []byte) {}
 func server() (collogspb.LogsServiceClient, func()) {
 	addr := "localhost:4317"
 	buffer := 101024 * 1024
 	lis := bufconn.Listen(buffer)
 
 	baseServer := grpc.NewServer()
-	collogspb.RegisterLogsServiceServer(baseServer, newServer(addr))
+	collogspb.RegisterLogsServiceServer(baseServer, newServer(addr, &noopSvc{}))
 	go func() {
 		if err := baseServer.Serve(lis); err != nil {
 			log.Printf("error serving server: %v", err)

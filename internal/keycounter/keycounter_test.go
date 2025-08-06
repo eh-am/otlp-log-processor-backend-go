@@ -2,6 +2,7 @@ package keycounter_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"dash0.com/otlp-log-processor-backend/internal/keycounter"
@@ -20,7 +21,10 @@ func TestCount(t *testing.T) {
 	kc.Add("myval")
 	kc.Add("myval")
 	kc.Flush()
-	assert.Equal(t, `"myval" - 2\n`, buf.String())
+
+	fmt.Println("buf string", buf.String())
+	assert.Equal(t, `"myval" - 2
+`, buf.String())
 	buf.Reset()
 
 	kc.Add("myval")
@@ -28,6 +32,8 @@ func TestCount(t *testing.T) {
 	kc.Add("myval")
 	kc.Add("myval2")
 	kc.Flush()
-	assert.Equal(t, `"myval" - 3\n"myval2" - 1\n`, buf.String())
+	assert.Equal(t, `"myval" - 3
+"myval2" - 1
+`, buf.String())
 	buf.Reset()
 }

@@ -19,7 +19,7 @@ func TestParserPipeline(t *testing.T) {
 
 	pipeline := parserpipeline.NewPipeline(&mockParser, &mockParser, &mockParser)
 
-	got, err := pipeline([]byte("1"))
+	got, err := pipeline.Parse([]byte("1"))
 	assert.NoError(t, err)
 
 	want := "11111111"
