@@ -10,3 +10,8 @@ Run the application
 ```shell
 make run
 ```
+
+To run the tests
+```shell
+make test
+```
